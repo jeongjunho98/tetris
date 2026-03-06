@@ -24,7 +24,15 @@ const SidePanel = ({ score, level, rows, nextPiece }: SidePanelProps) => {
       </div>
       <div className="panel-section">
         <div className="section-title">Next</div>
-        <div className="next-piece-display">
+        <div 
+          className="next-piece-display"
+          style={{
+            gridTemplateColumns: `repeat(${nextPiece.shape[0].length}, 20px)`,
+            gridTemplateRows: `repeat(${nextPiece.shape.length}, 20px)`,
+            width: `${nextPiece.shape[0].length * 21}px`, // Adjust width dynamically
+            height: `${nextPiece.shape.length * 21}px`
+          }}
+        >
           {nextPiece.shape.map((row: any[], y: number) =>
             row.map((cell: any, x: number) => (
               <div 
