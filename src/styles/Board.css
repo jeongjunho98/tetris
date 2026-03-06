@@ -1,0 +1,31 @@
+.board-container {
+  display: grid;
+  grid-template-columns: repeat(10, 30px);
+  grid-template-rows: repeat(20, 30px);
+  gap: 2px;
+  background-color: #333;
+  padding: 5px;
+  border: 4px solid var(--neon-purple);
+  box-shadow: 0 0 15px var(--neon-purple);
+  border-radius: 4px;
+}
+
+.cell {
+  width: 30px;
+  height: 30px;
+  background-color: var(--board-bg);
+  border-radius: 2px;
+}
+
+.cell-active {
+  box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+/* Tetromino Colors */
+.cell-I { background-color: #00f0f0; box-shadow: 0 0 5px #00f0f0; }
+.cell-J { background-color: #0000f0; box-shadow: 0 0 5px #0000f0; }
+.cell-L { background-color: #f0a000; box-shadow: 0 0 5px #f0a000; }
+.cell-O { background-color: #f0f000; box-shadow: 0 0 5px #f0f000; }
+.cell-S { background-color: #00f000; box-shadow: 0 0 5px #00f000; }
+.cell-T { background-color: #a000f0; box-shadow: 0 0 5px #a000f0; }
+.cell-Z { background-color: #f00000; box-shadow: 0 0 5px #f00000; }
