@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import Board from './components/Board'
 import SidePanel from './components/SidePanel'
 import { useTetris } from './hooks/useTetris'
@@ -17,6 +17,7 @@ function App() {
     drop,
     movePiece,
     rotatePiece,
+    getGhostPos,
     gameOver,
     score,
     setScore,
@@ -29,7 +30,15 @@ function App() {
     nextPiece
   } = useTetris();
 
-  // Line clearing logic
+  const gameContainerRef = useRef<HTMLDivElement>(null);
+
+  // Focus the game container whenever the game starts or restarts
+  useEffect(() => {
+    if (dropTime && gameContainerRef.current) {
+      gameContainerRef.current.focus();
+    }
+  }, [dropTime]);
+
   const sweepRows = useCallback((newStage: any[][]) => {
     let rowsCleared = 0;
     const sweptStage = newStage.reduce((acc, row) => {
@@ -43,17 +52,13 @@ function App() {
     }, [] as any[][]);
 
     if (rowsCleared > 0) {
-      setScore(prev => prev + rowsCleared * 100);
+      const linePoints = [0, 100, 300, 500, 800]; // Higher score for multiple lines
+      setScore(prev => prev + linePoints[rowsCleared] * (level + 1));
       setRows(prev => prev + rowsCleared);
-      if (rows + rowsCleared >= (level + 1) * 10) {
-        setLevel(prev => prev + 1);
-        setDropTime(prev => (prev ? prev * 0.9 : null));
-      }
     }
     return sweptStage;
-  }, [rows, level, setScore, setRows, setLevel, setDropTime]);
+  }, [level, setScore, setRows]);
 
-  // Handle piece collision and merging
   useEffect(() => {
     if (piece.collided) {
       const newStage = stage.map(row => [...row]);
@@ -79,49 +84,65 @@ function App() {
     drop();
   }, dropTime);
 
-  const handleKeyDown = ({ keyCode }: { keyCode: number }) => {
-    if (!gameOver) {
-      if (keyCode === 37) { // Left
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!gameOver && dropTime) {
+      if (e.keyCode === 37) { // Left
+        e.preventDefault();
         movePiece(-1);
-      } else if (keyCode === 39) { // Right
+      } else if (e.keyCode === 39) { // Right
+        e.preventDefault();
         movePiece(1);
-      } else if (keyCode === 40) { // Down
+      } else if (e.keyCode === 40) { // Down
+        e.preventDefault();
         drop();
-      } else if (keyCode === 38) { // Up (Rotate)
-        rotatePiece(stage, 1);
-      } else if (keyCode === 32) { // Space (Hard drop)
-        let tempY = 0;
-        while (!checkCollision(piece, stage, { x: 0, y: tempY + 1 })) {
-          tempY += 1;
-        }
-        updatePiecePos({ x: 0, y: tempY, collided: true });
+      } else if (e.keyCode === 38) { // Up
+        e.preventDefault();
+        rotatePiece(stage);
+      } else if (e.keyCode === 32) { // Space (Hard drop)
+        e.preventDefault();
+        const ghost = getGhostPos();
+        // Immediately place at ghost position and trigger collision logic
+        setPiece((prev: any) => ({
+          ...prev,
+          pos: ghost,
+          collided: true
+        }));
       }
     }
   };
 
   return (
     <div 
+      ref={gameContainerRef}
       className="app-container" 
       role="button" 
       tabIndex={0} 
-      onKeyDown={e => handleKeyDown(e)}
+      onKeyDown={handleKeyDown}
       style={{ outline: 'none' }}
     >
       <h1 className="game-title">TETRIS</h1>
       <div className="game-layout">
         <div className="game-area">
-          <Board stage={stage} piece={piece} />
-          {gameOver && (
+          <Board stage={stage} piece={piece} ghostPos={getGhostPos()} />
+          {(gameOver || !dropTime) && (
             <div className="game-over-overlay">
-              <div className="game-over-text">GAME OVER</div>
+              <div className="game-over-content">
+                <div className="game-over-text">{gameOver ? 'GAME OVER' : 'READY?'}</div>
+                <button className="start-button" onClick={startGame}>
+                  {gameOver ? 'RETRY' : 'START GAME'}
+                </button>
+              </div>
             </div>
           )}
         </div>
         <div className="side-area">
           <SidePanel score={score} level={level} rows={rows} nextPiece={nextPiece} />
-          <button className="start-button" onClick={startGame}>
-            {gameOver || !dropTime ? 'START GAME' : 'RESTART'}
-          </button>
+          <div className="controls-guide">
+            <p>← → : Move</p>
+            <p>↑ : Rotate</p>
+            <p>↓ : Soft Drop</p>
+            <p>Space : Hard Drop</p>
+          </div>
         </div>
       </div>
     </div>

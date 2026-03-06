@@ -24,9 +24,10 @@ export const useTetris = () => {
   const [dropTime, setDropTime] = useState<number | null>(null);
 
   const resetPiece = useCallback(() => {
+    const newPiece = nextPiece;
     setPiece({
       pos: { x: STAGE_WIDTH / 2 - 2, y: 0 },
-      tetromino: nextPiece,
+      tetromino: newPiece,
       collided: false,
     });
     setNextPiece(randomTetromino());
@@ -72,6 +73,12 @@ export const useTetris = () => {
   };
 
   const drop = () => {
+    // Increase level when player has cleared 10 rows
+    if (rows > (level + 1) * 10) {
+      setLevel((prev) => prev + 1);
+      setDropTime(1000 / (level + 1) + 200);
+    }
+
     if (!checkCollision(piece, stage, { x: 0, y: 1 })) {
       updatePiecePos({ x: 0, y: 1, collided: false });
     } else {
@@ -89,28 +96,35 @@ export const useTetris = () => {
     }
   };
 
-  const rotate = (matrix: any[][], dir: number) => {
-    const rotated = matrix.map((_, index) => matrix.map((col) => col[index]));
-    if (dir > 0) return rotated.map((row) => row.reverse());
-    return rotated.reverse();
+  const rotate = (matrix: any[][]) => {
+    return matrix.map((_, index) => matrix.map((col) => col[index])).map((row) => row.reverse());
   };
 
-  const rotatePiece = (stage: any, dir: number) => {
+  const rotatePiece = (stage: any) => {
     const clonedPiece = JSON.parse(JSON.stringify(piece));
-    clonedPiece.tetromino.shape = rotate(clonedPiece.tetromino.shape, dir);
+    clonedPiece.tetromino.shape = rotate(clonedPiece.tetromino.shape);
 
     const pos = clonedPiece.pos.x;
     let offset = 1;
+    // Basic Wall Kick: Try moving the piece horizontally if rotation causes collision
     while (checkCollision(clonedPiece, stage, { x: 0, y: 0 })) {
       clonedPiece.pos.x += offset;
       offset = -(offset + (offset > 0 ? 1 : -1));
       if (offset > clonedPiece.tetromino.shape[0].length) {
-        rotate(clonedPiece.tetromino.shape, -dir);
-        clonedPiece.pos.x = pos;
-        return;
+        // Rotate back if no position works
+        return; 
       }
     }
     setPiece(clonedPiece);
+  };
+
+  // Ghost Piece logic: Calculate the lowest possible position for the current piece
+  const getGhostPos = () => {
+    let ghostY = 0;
+    while (!checkCollision(piece, stage, { x: 0, y: ghostY + 1 })) {
+      ghostY += 1;
+    }
+    return { x: piece.pos.x, y: piece.pos.y + ghostY };
   };
 
   return {
@@ -124,6 +138,7 @@ export const useTetris = () => {
     drop,
     movePiece,
     rotatePiece,
+    getGhostPos,
     gameOver,
     score,
     setScore,
