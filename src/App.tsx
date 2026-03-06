@@ -10,9 +10,8 @@ function App() {
     stage,
     setStage,
     piece,
-    updatePiecePos,
+    setPiece,
     resetPiece,
-    checkCollision,
     startGame,
     drop,
     movePiece,
@@ -24,9 +23,7 @@ function App() {
     rows,
     setRows,
     level,
-    setLevel,
     dropTime,
-    setDropTime,
     nextPiece
   } = useTetris();
 

@@ -104,7 +104,6 @@ export const useTetris = () => {
     const clonedPiece = JSON.parse(JSON.stringify(piece));
     clonedPiece.tetromino.shape = rotate(clonedPiece.tetromino.shape);
 
-    const pos = clonedPiece.pos.x;
     let offset = 1;
     // Basic Wall Kick: Try moving the piece horizontally if rotation causes collision
     while (checkCollision(clonedPiece, stage, { x: 0, y: 0 })) {
@@ -121,7 +120,7 @@ export const useTetris = () => {
   // Ghost Piece logic: Calculate the lowest possible position for the current piece
   const getGhostPos = () => {
     let ghostY = 0;
-    while (!checkCollision(piece, stage, { x: 0, y: ghostY + 1 })) {
+    while (!checkCollision(piece, stage, { x: 0, y: 1 + ghostY })) {
       ghostY += 1;
     }
     return { x: piece.pos.x, y: piece.pos.y + ghostY };
@@ -131,6 +130,7 @@ export const useTetris = () => {
     stage,
     setStage,
     piece,
+    setPiece,
     updatePiecePos,
     resetPiece,
     checkCollision,
