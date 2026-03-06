@@ -119,14 +119,19 @@ export const useTetris = () => {
 
   // Ghost Piece logic: Calculate the lowest possible position for the current piece
   const getGhostPos = () => {
-    if (!piece.tetromino || piece.tetromino.shape[0][0] === 0) {
+    // Check if the tetromino is actually empty (all zeros)
+    const isEmpty = piece.tetromino.shape.every((row: any[]) => row.every((cell: any) => cell === 0));
+    if (isEmpty) {
       return piece.pos;
     }
+
     let ghostY = 0;
-    while (!checkCollision(piece, stage, { x: 0, y: 1 + ghostY })) {
+    // Maximum board height is 20, so we should never loop more than that
+    while (ghostY < 20) {
+      if (checkCollision(piece, stage, { x: 0, y: ghostY + 1 })) {
+        break;
+      }
       ghostY += 1;
-      // Safety break to prevent infinite loop
-      if (ghostY > 20) break;
     }
     return { x: piece.pos.x, y: piece.pos.y + ghostY };
   };

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useMemo } from 'react'
 import Board from './components/Board'
 import SidePanel from './components/SidePanel'
 import { useTetris } from './hooks/useTetris'
@@ -28,6 +28,9 @@ function App() {
   } = useTetris();
 
   const gameContainerRef = useRef<HTMLDivElement>(null);
+
+  // Memoize ghost position calculation
+  const ghostPos = useMemo(() => getGhostPos(), [piece, stage]);
 
   // Focus the game container whenever the game starts or restarts
   useEffect(() => {
@@ -75,7 +78,7 @@ function App() {
       setStage(sweptStage);
       resetPiece();
     }
-  }, [piece.collided, piece.pos, piece.tetromino, stage, resetPiece, setStage, sweepRows]);
+  }, [piece.collided]); // Simplified dependency array to avoid unnecessary re-runs
 
   useInterval(() => {
     drop();
@@ -97,11 +100,10 @@ function App() {
         rotatePiece(stage);
       } else if (e.keyCode === 32) { // Space (Hard drop)
         e.preventDefault();
-        const ghost = getGhostPos();
         // Immediately place at ghost position and trigger collision logic
         setPiece((prev: any) => ({
           ...prev,
-          pos: ghost,
+          pos: ghostPos,
           collided: true
         }));
       }
@@ -120,7 +122,7 @@ function App() {
       <h1 className="game-title">TETRIS</h1>
       <div className="game-layout">
         <div className="game-area">
-          <Board stage={stage} piece={piece} ghostPos={getGhostPos()} />
+          <Board stage={stage} piece={piece} ghostPos={ghostPos} />
           {(gameOver || !dropTime) && (
             <div className="game-over-overlay">
               <div className="game-over-content">
