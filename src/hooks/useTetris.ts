@@ -119,9 +119,14 @@ export const useTetris = () => {
 
   // Ghost Piece logic: Calculate the lowest possible position for the current piece
   const getGhostPos = () => {
+    if (!piece.tetromino || piece.tetromino.shape[0][0] === 0) {
+      return piece.pos;
+    }
     let ghostY = 0;
     while (!checkCollision(piece, stage, { x: 0, y: 1 + ghostY })) {
       ghostY += 1;
+      // Safety break to prevent infinite loop
+      if (ghostY > 20) break;
     }
     return { x: piece.pos.x, y: piece.pos.y + ghostY };
   };
